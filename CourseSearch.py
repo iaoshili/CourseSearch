@@ -6,19 +6,6 @@ import subprocess
 import os
 import re
 
-def main():
-	knowledgeKeyWord ="Algorithm"
-
-	coursePathAndNameList = getCoursesPathListAndNameList(SearchDir = "/Users/Greyjoy/Documents/Lab/Davis/CourseIntro/")
-	coursesPathList = coursePathAndNameList[0]
-	courseNameList = coursePathAndNameList[1]
-
-	relatedKeyWordList = getRelatedKeyWord(knowledgeKeyWord)
-	searchQueryWeights = getSearchQueryWeights(knowledgeKeyWord, relatedKeyWordList)
-	allCoursesWeightList = getCourseWeights(knowledgeKeyWord, relatedKeyWordList, coursesPathList, courseNameList)
-
-	IndexOfTopCourse = Rank(knowledgeKeyWord, searchQueryWeights, allCoursesWeightList, courseNameList)
-	printResult(IndexOfTopCourse, coursesPathList, courseNameList, knowledgeKeyWord)
 
 '''
 Get a list of key words related to the query knowledge key word, intentionally remove the query word if it appears.
@@ -202,4 +189,4 @@ def printResult(IndexOfTopCourse, coursesPathList,courseNameList, knowledgeKeyWo
 
 		f.close()
 
-main()
+# main()

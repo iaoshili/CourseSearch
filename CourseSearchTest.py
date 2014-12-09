@@ -1,4 +1,4 @@
-# import CourseSearch
+from CourseSearch import *
 
 def courseIntroHtmlFindCourseNameLocation():
 	path = coursesPathList[i]
@@ -21,15 +21,10 @@ def courseIntroHtmlFindCourseNameLocation():
 
 def main():
 	knowledgeKeyWord = "algorithm"
+	print getRelatedKeyWord("algorithm")
 
-	coursePathAndNameList = CourseSearch.getCoursesPathListAndNameList(SearchDir = "/Users/Greyjoy/Documents/Lab/Davis/CourseIntro/")
-	coursesPathList = coursePathAndNameList[0]
-	courseNameList = coursePathAndNameList[1]
+	# coursePathAndNameList = CourseSearch.getCoursesPathListAndNameList(SearchDir = "/Users/Greyjoy/Documents/Lab/Davis/CourseIntro/")
+	# coursesPathList = coursePathAndNameList[0]
+	# courseNameList = coursePathAndNameList[1]
 
-
-# main()
-
-
-myList = [1, 2, 3, 100, 5]
-del myList[1]
-print myList
+main()
