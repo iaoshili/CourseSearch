@@ -57,7 +57,28 @@ if courseNameSplit in courseNameLineSplit:
 	# 	print "=============================" +"\n"
 	# f.close()
 
-		
+# '''
+# Return a list containing all the classes' names. And remove duplicate.
+# '''
+# def getCourseNameList(SearchDir):
+# 	courseNameSet = Set()
+# 	courseNameList = []
+# 	'''
+# 	Recursively find all the file path in searchDir, and save them to a list.
+# 	'''
+# 	result = [os.path.join(dp, f) for dp, dn, filenames in os.walk(SearchDir) for f in filenames if os.path.splitext(f)[1] == '.html']
+# 	'''
+# 	For each of the path name in the list, change them to the format that is 
+# 	readable by linux system, and check if the given key word exist.
+# 	'''
+# 	for i in range(len(result)):
+# 		CourseName = os.path.basename(result[i])[:-16]
+# 		if CourseName not in courseNameSet:			
+# 			linuxPath = changeToLinuxPath(result[i])
+# 			courseNameSet.add(CourseName)
+# 			courseNameList.append(result[i])
+# 			# checkIfExist(result[i], knowledgeKeyWord, CourseName)
+# 	return courseNameList
 
 #-q: quit silently
 #-r: recursively find 

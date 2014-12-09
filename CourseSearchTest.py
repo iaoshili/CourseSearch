@@ -1,5 +1,28 @@
 from CourseSearch import *
 
+def testCourseWeight():
+	knowledgeKeyWord ="Algorithm"
+
+	coursePathAndNameList = getCoursesPathListAndNameList(SearchDir = "/Users/Greyjoy/Documents/Lab/Davis/CourseIntro/")
+	coursesPathList = coursePathAndNameList[0]
+	courseNameList = coursePathAndNameList[1]
+
+	relatedKeyWordList = getRelatedKeyWord(knowledgeKeyWord)
+	searchQueryWeights = getSearchQueryWeights(knowledgeKeyWord, relatedKeyWordList)
+	allCoursesWeightList = getCourseWeights(knowledgeKeyWord, relatedKeyWordList, coursesPathList, courseNameList)
+
+	programRank1ClassIndex = -1
+	for i in xrange(0,len(courseNameList)):
+		if courseNameList[i] == "Artificial Intelligence Planning":
+			print i
+			break
+
+	print "Algorithm, part II weight: "
+	print getCourseScore(searchQueryWeights, allCoursesWeightList[37],knowledgeKeyWord,courseNameList)
+
+	print "AI planning weight:"
+	print getCourseScore(searchQueryWeights, allCoursesWeightList[0],knowledgeKeyWord,courseNameList)
+
 def courseIntroHtmlFindCourseNameLocation():
 	path = coursesPathList[i]
 	courseName = courseNameList[i]
@@ -20,11 +43,13 @@ def courseIntroHtmlFindCourseNameLocation():
 	print courseNameWOSplit
 
 def main():
-	knowledgeKeyWord = "algorithm"
-	print getRelatedKeyWord("algorithm")
-
-	# coursePathAndNameList = CourseSearch.getCoursesPathListAndNameList(SearchDir = "/Users/Greyjoy/Documents/Lab/Davis/CourseIntro/")
-	# coursesPathList = coursePathAndNameList[0]
-	# courseNameList = coursePathAndNameList[1]
+	search = CourseSearch("dynamic programming","/Users/Greyjoy/Documents/Lab/Davis/CourseIntro/")
+	print search.courseNameList[37]
+	print search.coursesScoreList[37]
+	search.rank()
+	# print "Score for Algorithm, partII"
+	# print search.coursesScoreList[37]
+	# print "Score for AI, planning"
+	# print search.coursesScoreList[0]
 
 main()

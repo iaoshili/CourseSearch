@@ -6,187 +6,176 @@ import subprocess
 import os
 import re
 
+class CourseSearch:	
 
-'''
-Get a list of key words related to the query knowledge key word, intentionally remove the query word if it appears.
-'''
-def getRelatedKeyWord(knowledgeKeyWord):
-	wikiPage = wikipedia.page(knowledgeKeyWord)
-	RelatedKeyWordList = wikiPage.links	
-	indexToRemove = -1
-	for i in xrange(0,len(RelatedKeyWordList)):
-		if knowledgeKeyWord.lower() == RelatedKeyWordList[i].lower():
-			indexToRemove = i
-			break
+	def __init__(self, knowledgeKeyWord, searchDir):
+		self.knowledgeKeyWord = knowledgeKeyWord
+		self.searchDir = searchDir
 
-	if indexToRemove != -1:
-		del RelatedKeyWordList[indexToRemove]
+		self.coursesPathList = []
+		self.courseNameList = []
+		self.getCoursesPathListAndNameList()
 
-	return wikiPage.links
-
-'''
-Return a list of weights assigned to the words related to the knowledge key word given.
-'''
-def getSearchQueryWeights(knowledgeKeyWord, relatedKeyWordList):
-	wikiPage = wikipedia.page(knowledgeKeyWord)
-	summary = wikiPage.summary
-	searchQueryWeights = []
-
-	for i in xrange(0,len(relatedKeyWordList)):		
-		if relatedKeyWordList[i].lower() in summary.lower():
-			searchQueryWeights.append(4) #Give weight 4 for words in summary
-		else:
-			searchQueryWeights.append(1) #Give weight 1 for word appear anywhere else
-
-	return searchQueryWeights
-
-'''
-Return a list containing all the classes' paths and a list of course names. And remove duplicate.
-'''
-def getCoursesPathListAndNameList(SearchDir):
-	# knowledgeKeyWord = raw_input("Please enter the knowledge you want to learn: ")
-	courseNameSet = Set()
-	coursesPathList = []
-	courseNameList = []
+		self.relatedKeyWordList = self.getRelatedKeyWord()
+		self.queryWeightList = self.getQueryWeightList()
+		self.coursesWeightList = self.getCoursesWeightList()
+		self.coursesScoreList = self.getCoursesScoreList()
 
 	'''
-	Recursively find all the file path in searchDir, and save them to a list.
+	Return a list containing all the classes' paths and a list of course names. And remove duplicate.
 	'''
-	result = [os.path.join(dp, f) for dp, dn, filenames in os.walk(SearchDir) for f in filenames if os.path.splitext(f)[1] == '.html']
+	def getCoursesPathListAndNameList(self):
+		courseNameSet = Set()
+
+		'''
+		Recursively find all the file path in searchDir, and save them to a list.
+		'''
+		result = [os.path.join(dp, f) for dp, dn, filenames in os.walk(self.searchDir) for f in filenames if os.path.splitext(f)[1] == '.html']
+		'''
+		For each of the path name in the list, change them to the format that is 
+		readable by linux system, and check if the given key word exist.
+		'''
+		for i in range(len(result)):
+			CourseName = os.path.basename(result[i])[:-16]		
+			if CourseName not in courseNameSet:			
+				courseNameSet.add(CourseName)
+				self.coursesPathList.append(result[i])
+				self.courseNameList.append(CourseName)
+
 	'''
-	For each of the path name in the list, change them to the format that is 
-	readable by linux system, and check if the given key word exist.
+	Get a list of key words related to the query knowledge key word, intentionally remove the query word if it appears.
 	'''
-	for i in range(len(result)):
-		CourseName = os.path.basename(result[i])[:-16]		
-		if CourseName not in courseNameSet:			
-			courseNameSet.add(CourseName)
-			coursesPathList.append(result[i])
-			courseNameList.append(CourseName)
+	def getRelatedKeyWord(self):
+		wikiPage = wikipedia.page(self.knowledgeKeyWord)
+		relatedKeyWordList = wikiPage.links	
+		indexToRemove = -1
+		for i in xrange(0,len(relatedKeyWordList)):
+			if self.knowledgeKeyWord.lower() == relatedKeyWordList[i].lower():
+				indexToRemove = i
+				break
 
-	pathAndNameList = [coursesPathList,courseNameList]
-	return pathAndNameList
+		if indexToRemove != -1:
+			del relatedKeyWordList[indexToRemove]
 
-# '''
-# Return a list containing all the classes' names. And remove duplicate.
-# '''
-# def getCourseNameList(SearchDir):
-# 	courseNameSet = Set()
-# 	courseNameList = []
-# 	'''
-# 	Recursively find all the file path in searchDir, and save them to a list.
-# 	'''
-# 	result = [os.path.join(dp, f) for dp, dn, filenames in os.walk(SearchDir) for f in filenames if os.path.splitext(f)[1] == '.html']
-# 	'''
-# 	For each of the path name in the list, change them to the format that is 
-# 	readable by linux system, and check if the given key word exist.
-# 	'''
-# 	for i in range(len(result)):
-# 		CourseName = os.path.basename(result[i])[:-16]
-# 		if CourseName not in courseNameSet:			
-# 			linuxPath = changeToLinuxPath(result[i])
-# 			courseNameSet.add(CourseName)
-# 			courseNameList.append(result[i])
-# 			# checkIfExist(result[i], knowledgeKeyWord, CourseName)
-# 	return courseNameList
+		return relatedKeyWordList
 
+	'''
+	Return a list of weights assigned to the words related to the knowledge key word given.
+	'''
+	def getQueryWeightList(self):
+		wikiPage = wikipedia.page(self.knowledgeKeyWord)
+		summary = wikiPage.summary
+		queryWeightList = []	
 
-def getCourseWeights(knowledgeKeyWord, relatedKeyWordList, coursesPathList,courseNameList):
-	SectionList = {"About the Course":8, "Course Syllabus":7, "Categories":7,"Related Courses":3,
-	"Recommended Background":3,"In-course Textbooks":5,"Suggested Readings":5,"FAQ":3}
-	courseAllWeighList = []
-	courseWeightList = []
+		for i in xrange(0,len(self.relatedKeyWordList)):		
+			if self.relatedKeyWordList[i].lower() in summary.lower():
+				queryWeightList.append(4) #Give weight 4 for words in summary
+			else:
+				queryWeightList.append(1) #Give weight 1 for word appear anywhere else
 
-	for i in xrange(0,len(relatedKeyWordList)):
-		courseWeightList.append(0)
+		return queryWeightList
 
-	for i in xrange(0,len(coursesPathList)):
-		courseSummaryBeginLine = 0
+	'''
+	Return a list, each element is itself a weight list for the course in that index
+	'''
+	def getCoursesWeightList(self):
+		SectionList = {"About the Course":8, "Course Syllabus":7, "Categories":7,"Related Courses":3,
+		"Recommended Background":3,"In-course Textbooks":5,"Suggested Readings":5,"FAQ":3}
+		coursesWeightList = []
+		courseWeightList = []
 
-		path = coursesPathList[i]
-		courseName = courseNameList[i]
-		
-		f = open(path)
-		lines = f.readlines()
+		for i in xrange(0,len(self.relatedKeyWordList)):
+			courseWeightList.append(0)
 
-		scoreToThisSection = 0
+		for i in xrange(0,len(self.coursesPathList)):
+			courseSummaryBeginLine = 0
 
-		#Iterate through the current file
-		for i in range(0,len(lines)):
-			currLine = lines[i]
+			path = self.coursesPathList[i]
+			courseName = self.courseNameList[i]
+			
+			f = open(path)
+			lines = f.readlines()
 
-			#Assign score to this section
-			for section in SectionList.keys():
-				if section in currLine:
-					scoreToThisSection = SectionList.get(section)
+			scoreToThisSection = 0
+
+			#Iterate through the current file
+			for i in range(0,len(lines)):
+				currLine = lines[i]
+
+				#Assign score to this section
+				for section in SectionList.keys():
+					if section in currLine:
+						scoreToThisSection = SectionList.get(section)
+						break
+
+				for i in xrange(0,len(self.relatedKeyWordList)):
+					if self.relatedKeyWordList[i].lower() in currLine.decode('utf-8').lower():
+						courseWeightList[i] = max(courseWeightList[i], scoreToThisSection)
+						f.close()
+
+			#If you don't copy the data, you will overwrite them.
+			courseWeightListToAdd = courseWeightList[:]
+			coursesWeightList.append(courseWeightListToAdd)
+
+			for i in xrange(0,len(self.relatedKeyWordList)):
+				courseWeightList[i] = 0
+
+		return coursesWeightList
+
+	def getCoursesScoreList(self):
+		scoreIfCourseNameMatch = 80
+		scoreList = []
+		score = 0.0
+		for i in xrange(0,len(self.courseNameList)):
+			for j in xrange(0,len(self.queryWeightList)):
+				score += self.queryWeightList[j]*self.coursesWeightList[i][j]
+				currCourseName = self.courseNameList[i]
+
+			courseNameSplit = re.split('; |, |\*|\n|_ | |: ',currCourseName)
+			couseNameWithoutSplit = " ".join(courseNameSplit)
+			if self.knowledgeKeyWord.lower() in couseNameWithoutSplit.lower():
+				score += scoreIfCourseNameMatch
+
+			scoreList.append(score)
+			score = 0.0
+
+		return scoreList
+
+	def	rank(self):
+		NumToShow = 5
+		scoreToThisCourse = []
+		IndexOfTopCourse = []
+		IndexSet = Set()
+
+		scoreListClone = self.coursesScoreList[:]
+		sortedList = sorted(scoreListClone)
+		for i in xrange(0,NumToShow):
+			score = sortedList[-1-i]
+			for j in xrange(0,len(self.coursesScoreList)):
+				if self.coursesScoreList[j] == score and j not in IndexSet:
+					IndexOfTopCourse.append(j)
+					IndexSet.add(j)
+					print self.courseNameList[j]
+					print self.coursesScoreList[j]
 					break
 
-			for i in xrange(0,len(relatedKeyWordList)):
-				if relatedKeyWordList[i].lower() in currLine.decode('utf-8').lower():
-					courseWeightList[i] = max(courseWeightList[i], scoreToThisSection)
-					f.close()
+		# printResult(IndexOfTopCourse) 
 
-		#If you don't copy the data, you will overwrite them.
-		courseWeightListToAdd = courseWeightList[:]
-		courseAllWeighList.append(courseWeightListToAdd)
+	def printResult(self, IndexOfTopCourse):
+		for i in xrange(0,len(IndexOfTopCourse)):
+			path = self.coursesPathList[i]
+			CourseName = self.courseNameList[i]
+			f = open(path)
+			lines = f.readlines()
 
-		for i in xrange(0,len(relatedKeyWordList)):
-			courseWeightList[i] = 0
+			print "Possible course found: "+CourseName + "\n"
 
-	return courseAllWeighList
+			for j in range(0,len(lines)):
+				if self.knowledgeKeyWord in lines[j]:
+					print lines[j]
+					print lines[j+1]
+					break
 
-def	Rank(knowledgeKeyWord, searchQueryWeights, allCoursesWeightList, courseNameList):
-	NumToShow = 10
-	scoreIfCourseNameMatch = 80
-	scoreToThisCourse = []
-	IndexOfTopCourse = []
+			print "=============================" +"\n"
 
-	for i in xrange(0,len(courseNameList)):
-		currCourseName = courseNameList[i]
-		courseNameSplit = re.split('; |, |\*|\n|_ | |: ',currCourseName)
-		couseNameWithoutSplit = " ".join(courseNameSplit)
-
-		if knowledgeKeyWord.lower() in couseNameWithoutSplit.lower():
-			scoreToThisCourse.append(scoreIfCourseNameMatch)
-		else:
-			scoreToThisCourse.append(0)
-
-	#Iterate through all the courses
-	for i in xrange(0,len(courseNameList)):		
-		for j in xrange(0,len(searchQueryWeights)):
-			scoreToThisCourse[i] += searchQueryWeights[j]*allCoursesWeightList[i][j]
-
-	#Sort reference: http://stackoverflow.com/questions/6422700/how-to-get-indices-of-a-sorted-array-in-python
-	#This weird snippet of code will do this: input [1, 2, 3, 100, 5], ouput:[0, 1, 2, 4, 3]
-	sortedList = [i[0] for i in sorted(enumerate(scoreToThisCourse), key=lambda x:x[1])]
-	for i in xrange(0,NumToShow):
-		currCourseIndex = 0
-		currPosition = len(courseNameList) - i - 1
-		for i in xrange(0,len(sortedList)):
-			if sortedList[i] == currPosition:
-				currCourseIndex = i
-				break
-		IndexOfTopCourse.append(currCourseIndex)
-
-	return IndexOfTopCourse
-
-def printResult(IndexOfTopCourse, coursesPathList,courseNameList, knowledgeKeyWord):
-	for i in xrange(0,len(IndexOfTopCourse)):
-		path = coursesPathList[i]
-		CourseName = courseNameList[i]
-		f = open(path)
-		lines = f.readlines()
-
-		print "Possible course found: "+CourseName + "\n"
-
-		for j in range(0,len(lines)):
-			if knowledgeKeyWord in lines[j]:
-				print lines[j]
-				print lines[j+1]
-				break
-
-		print "=============================" +"\n"
-
-		f.close()
-
-# main()
+			f.close()
