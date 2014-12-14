@@ -43,13 +43,9 @@ def courseIntroHtmlFindCourseNameLocation():
 	print courseNameWOSplit
 
 def main():
-	search = CourseSearch("dynamic programming","/Users/Greyjoy/Documents/Lab/Davis/CourseIntro/")
-	print search.courseNameList[37]
-	print search.coursesScoreList[37]
-	search.rank()
-	# print "Score for Algorithm, partII"
+	search = CourseSearch("algorithm","/Users/Greyjoy/Documents/Lab/Davis/CourseIntro/")
+	print search.rank()
+	# print search.courseNameList[37]
 	# print search.coursesScoreList[37]
-	# print "Score for AI, planning"
-	# print search.coursesScoreList[0]
 
 main()

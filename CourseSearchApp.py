@@ -1,6 +1,6 @@
-import CourseSearch
+from CourseSearch import *
 
-search = CourseSearch("dynamic programming","/Users/Greyjoy/Documents/Lab/Davis/CourseIntro/")
+search = CourseSearch("algorithms","/Users/Greyjoy/Documents/Lab/Davis/CourseIntro/")
 print search.courseNameList[37]
 print search.coursesScoreList[37]
 search.rank()

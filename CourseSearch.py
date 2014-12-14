@@ -43,7 +43,8 @@ class CourseSearch:
 				self.courseNameList.append(CourseName)
 
 	'''
-	Get a list of key words related to the query knowledge key word, intentionally remove the query word if it appears.
+	Get a list of key words related to the query knowledge key word, 
+	intentionally set the query word to be the last one of the list.
 	'''
 	def getRelatedKeyWord(self):
 		wikiPage = wikipedia.page(self.knowledgeKeyWord)
@@ -57,21 +58,27 @@ class CourseSearch:
 		if indexToRemove != -1:
 			del relatedKeyWordList[indexToRemove]
 
+		relatedKeyWordList.append(self.knowledgeKeyWord)
+
 		return relatedKeyWordList
 
 	'''
 	Return a list of weights assigned to the words related to the knowledge key word given.
+	Give a tremendously big weight to the knowledgeKeyWord
 	'''
 	def getQueryWeightList(self):
+		weightForQueryWord = 10
+
 		wikiPage = wikipedia.page(self.knowledgeKeyWord)
 		summary = wikiPage.summary
 		queryWeightList = []	
 
-		for i in xrange(0,len(self.relatedKeyWordList)):		
+		for i in xrange(0,len(self.relatedKeyWordList)-1):		
 			if self.relatedKeyWordList[i].lower() in summary.lower():
 				queryWeightList.append(4) #Give weight 4 for words in summary
 			else:
-				queryWeightList.append(1) #Give weight 1 for word appear anywhere else
+				queryWeightList.append(0) #Give weight 0 for word appear anywhere else
+		queryWeightList.append(weightForQueryWord)
 
 		return queryWeightList
 
@@ -110,8 +117,9 @@ class CourseSearch:
 
 				for i in xrange(0,len(self.relatedKeyWordList)):
 					if self.relatedKeyWordList[i].lower() in currLine.decode('utf-8').lower():
-						courseWeightList[i] = max(courseWeightList[i], scoreToThisSection)
-						f.close()
+						courseWeightList[i] += scoreToThisSection
+			
+			f.close()
 
 			#If you don't copy the data, you will overwrite them.
 			courseWeightListToAdd = courseWeightList[:]
@@ -123,7 +131,7 @@ class CourseSearch:
 		return coursesWeightList
 
 	def getCoursesScoreList(self):
-		scoreIfCourseNameMatch = 80
+		scoreIfCourseNameMatch = 1000
 		scoreList = []
 		score = 0.0
 		for i in xrange(0,len(self.courseNameList)):
@@ -155,14 +163,13 @@ class CourseSearch:
 				if self.coursesScoreList[j] == score and j not in IndexSet:
 					IndexOfTopCourse.append(j)
 					IndexSet.add(j)
-					print self.courseNameList[j]
-					print self.coursesScoreList[j]
+					# print self.courseNameList[j]
+					# print self.coursesScoreList[j]
 					break
-
-		# printResult(IndexOfTopCourse) 
+		self.printResult(IndexOfTopCourse) 
 
 	def printResult(self, IndexOfTopCourse):
-		for i in xrange(0,len(IndexOfTopCourse)):
+		for i in IndexOfTopCourse:			
 			path = self.coursesPathList[i]
 			CourseName = self.courseNameList[i]
 			f = open(path)
@@ -172,6 +179,7 @@ class CourseSearch:
 
 			for j in range(0,len(lines)):
 				if self.knowledgeKeyWord in lines[j]:
+					print lines[j-1]
 					print lines[j]
 					print lines[j+1]
 					break
